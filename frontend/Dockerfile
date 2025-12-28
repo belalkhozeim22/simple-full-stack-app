@@ -3,7 +3,7 @@ FROM node:18-alpine AS build
 WORKDIR /app
 COPY frontend/package*.json ./
 RUN npm install
-COPY frontend .
+COPY . .
 RUN npm run build
 
 FROM nginx:alpine
