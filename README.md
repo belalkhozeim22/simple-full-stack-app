@@ -13,56 +13,60 @@ Images are pushed to Artifact Registry.
 GKE pulls updated images and applies Kubernetes manifests to deploy services.
 Diagram:
 
-flowchart LR
-    A[GitHub Repo] --> B[GitHub Actions CI/CD]
-    B -->|Build, Scan, Push, Deploy| C[GKE Cluster]
-    C --> D[Backend Pod (Node.js)]
-    C --> E[Frontend Pod (React/Nginx)]
-    D --> F[Cloud SQL PostgreSQL]
-    E --> F
-    F --> G[Persistent Storage]
-    D --> H[Users]
-    E --> H[Users]
 
-    subgraph CI/CD
-        B
+
+# Project Technical Documentation: GKE Full-Stack Deployment
+
+This repository hosts a production-grade, containerized full-stack application orchestrated by **Google Kubernetes Engine (GKE)**. The infrastructure follows modern DevOps patterns, utilizing **GitHub Actions** for automated delivery and **Cloud SQL** for managed relational data.
+
+---
+
+## 🏛️ System Architecture
+
+The following diagram illustrates the end-to-end lifecycle, from developer commit to high-availability deployment within Google Cloud.
+
+```mermaid
+graph TD
+    subgraph Local_Dev [Development Layer]
+        Dev[Developer] -- Git Push --> GH[GitHub Repository]
     end
 
-    subgraph GKE Cluster
-        C
-        D
-        E
+    subgraph Pipeline [CI/CD Pipeline - GitHub Actions]
+        GH --> Build[Docker Build]
+        Build --> Scan[Vulnerability Scan]
+        Scan --> Push[Push to Artifact Registry]
+        Push --> K8s_Deploy[kubectl apply]
     end
 
-    subgraph Database
-        F
-        G
+    subgraph GCP [Google Cloud Platform]
+        subgraph GKE [GKE Cluster]
+            direction TB
+            FE[Frontend Pod: React/Nginx]
+            BE[Backend Pod: Node.js]
+            LB[K8s Load Balancer]
+        end
+
+        subgraph Storage_Layer [Data Layer]
+            DB[(Cloud SQL: PostgreSQL)]
+            PV[Persistent Volume]
+        end
     end
 
+    %% Connections
+    K8s_Deploy -.-> GKE
+    Users((Users)) --> LB
+    LB --> FE
+    LB --> BE
+    FE --> BE
+    BE --> DB
+    DB --- PV
+
+    %% Styling
+    style GCP fill:#f9f9f9,stroke:#4285F4,stroke-width:2px
+    style Pipeline fill:#effaf0,stroke:#28a745,stroke-width:2px
+    style GKE fill:#e8f0fe,stroke:#1a73e8,stroke-width:2px
 
 
-           +------------------+
-           | GitHub Repo      |
-           +------------------+
-                   |
-                   v
-           +------------------+
-           | GitHub Actions   |
-           | - Build          |
-           | - Scan           |
-           | - Push           |
-           | - Deploy         |
-           +------------------+
-                   |
-                   v
-           +------------------+      +------------------+
-           | GKE Cluster      | ---> | Cloud SQL        |
-           | - Backend Pod    |      | PostgreSQL DB    |
-           | - Frontend Pod   |      +------------------+
-           +------------------+
-                   |
-                   v
-               Users
 Why this architecture:
 Kubernetes ensures scalability and resiliency.
 Docker containers provide consistent deployments across environments.
