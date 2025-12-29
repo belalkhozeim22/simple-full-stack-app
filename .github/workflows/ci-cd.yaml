@@ -11,6 +11,8 @@ env:
   REGION: ${{ secrets.GKE_CLUSTER_LOCATION }}
   CLUSTER_NAME: ${{ secrets.GKE_CLUSTER }}
   REGISTRY: us-central1-docker.pkg.dev
+  IMAGE_TAG: ${{ github.sha }}
+
 
 jobs:
   build-test-scan-deploy:
@@ -75,8 +77,8 @@ jobs:
             NAMESPACE=staging
           fi
 
-          sed -i "s|IMAGE_BACKEND|$REGISTRY/$PROJECT_ID/apps/backend:${{ github.sha }}|g" k8s/backend.yaml
-          sed -i "s|IMAGE_FRONTEND|$REGISTRY/$PROJECT_ID/apps/frontend:${{ github.sha }}|g" k8s/frontend.yaml
+          sed -i "s|IMAGE_BACKEND|$REGISTRY/$PROJECT_ID/apps/backend:IMAGE_TAG k8s/backend.yaml
+          sed -i "s|IMAGE_FRONTEND|$REGISTRY/$PROJECT_ID/apps/frontend:IMAGE_TAG k8s/frontend.yaml
 
           kubectl apply -f k8s/namespaces.yaml
           kubectl apply -n $NAMESPACE -f k8s/backend.yaml
