@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: backend
-  namespace: staging
+#  namespace: staging
 spec:
   replicas: 1
   selector:
@@ -45,7 +45,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: backend
-  namespace: staging
+#  namespace: staging
 spec:
   selector:
     app: backend
