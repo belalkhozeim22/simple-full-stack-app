@@ -69,17 +69,22 @@ jobs:
         run: |
           gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION
 
-      - name: Deploy to Kubernetes
-        run: |
-          if [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
-            NAMESPACE=production
-          else
-            NAMESPACE=staging
-          fi
-
-          sed -i "s|IMAGE_BACKEND|$REGISTRY/$PROJECT_ID/apps/backend:IMAGE_TAG k8s/backend.yaml
-          sed -i "s|IMAGE_FRONTEND|$REGISTRY/$PROJECT_ID/apps/frontend:IMAGE_TAG k8s/frontend.yaml
-
-          kubectl apply -f k8s/namespaces.yaml
-          kubectl apply -n $NAMESPACE -f k8s/backend.yaml
-          kubectl apply -n $NAMESPACE -f k8s/frontend.yaml
+          - name: Deploy to Kubernetes
+          run: |
+            if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
+              NAMESPACE=production
+            else
+              NAMESPACE=staging
+            fi
+        
+            IMAGE_TAG="$GITHUB_SHA"
+            IMAGE_BACKEND="$REGISTRY/$PROJECT_ID/apps/backend:$IMAGE_TAG"
+            IMAGE_FRONTEND="$REGISTRY/$PROJECT_ID/apps/frontend:$IMAGE_TAG"
+        
+            sed -i "s|IMAGE_BACKEND|$IMAGE_BACKEND|g" k8s/backend.yaml
+            sed -i "s|IMAGE_FRONTEND|$IMAGE_FRONTEND|g" k8s/frontend.yaml
+        
+            kubectl apply -f k8s/namespaces.yaml
+            kubectl apply -n $NAMESPACE -f k8s/backend.yaml
+            kubectl apply -n $NAMESPACE -f k8s/frontend.yaml
+        
