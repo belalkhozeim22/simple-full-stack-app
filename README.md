@@ -1,132 +1,108 @@
-Project Documentation
+CI/CD-Driven Kubernetes Application on Google Cloud Platform
 1. Architecture Overview
-Our application follows a microservices-inspired architecture, deployed on Google Cloud Platform (GCP) using Kubernetes (GKE). The architecture is designed to provide scalability, maintainability, and streamlined CI/CD deployments.
-Key components:
-Backend: Node.js application running inside a Docker container, providing REST APIs.
-Frontend: React application, served via containerized Nginx.
-Database: Managed PostgreSQL instance (Cloud SQL) for persistent storage.
-CI/CD pipeline: GitHub Actions for automated build, vulnerability scanning, Docker image push, and Kubernetes deployment.
-Interaction flow:
-Developers push code to main or staging.
-GitHub Actions builds Docker images and scans for vulnerabilities using Trivy.
-Images are pushed to Artifact Registry.
-GKE pulls updated images and applies Kubernetes manifests to deploy services.
-Diagram:
-
-
-
-# Project Technical Documentation: GKE Full-Stack Deployment
-
-This repository hosts a production-grade, containerized full-stack application orchestrated by **Google Kubernetes Engine (GKE)**. The infrastructure follows modern DevOps patterns, utilizing **GitHub Actions** for automated delivery and **Cloud SQL** for managed relational data.
-
----
-
-## 🏛️ System Architecture
-
-The following diagram illustrates the end-to-end lifecycle, from developer commit to high-availability deployment within Google Cloud.
-
-```mermaid
-graph TD
-    subgraph Local_Dev [Development Layer]
-        Dev[Developer] -- Git Push --> GH[GitHub Repository]
-    end
-
-    subgraph Pipeline [CI/CD Pipeline - GitHub Actions]
-        GH --> Build[Docker Build]
-        Build --> Scan[Vulnerability Scan]
-        Scan --> Push[Push to Artifact Registry]
-        Push --> K8s_Deploy[kubectl apply]
-    end
-
-    subgraph GCP [Google Cloud Platform]
-        subgraph GKE [GKE Cluster]
-            direction TB
-            FE[Frontend Pod: React/Nginx]
-            BE[Backend Pod: Node.js]
-            LB[K8s Load Balancer]
-        end
-
-        subgraph Storage_Layer [Data Layer]
-            DB[(Cloud SQL: PostgreSQL)]
-            PV[Persistent Volume]
-        end
-    end
-
-    %% Connections
-    K8s_Deploy -.-> GKE
-    Users((Users)) --> LB
-    LB --> FE
-    LB --> BE
-    FE --> BE
-    BE --> DB
-    DB --- PV
-
-    %% Styling
-    style GCP fill:#f9f9f9,stroke:#4285F4,stroke-width:2px
-    style Pipeline fill:#effaf0,stroke:#28a745,stroke-width:2px
-    style GKE fill:#e8f0fe,stroke:#1a73e8,stroke-width:2px
-
-
-Why this architecture:
-Kubernetes ensures scalability and resiliency.
-Docker containers provide consistent deployments across environments.
-CI/CD automates testing, scanning, and deployment to reduce human errors.
+This project demonstrates a full end-to-end CI/CD workflow for deploying a containerized full-stack application (backend and frontend) on Google Kubernetes Engine (GKE) using GitHub Actions. The architecture is designed following cloud-native principles, emphasizing automation, security, scalability, and operational simplicity.
+The application consists of two independently deployed services: a backend API and a frontend application. Each service is packaged as a Docker image and stored in Google Artifact Registry. A GitHub Actions pipeline is triggered on every push to the main or staging branches, automating the build, vulnerability scanning, image publishing, and Kubernetes deployment processes. The deployment target is determined dynamically based on the branch, ensuring environment separation between staging and production.
+This architecture was chosen because it balances robustness and cost-efficiency. Kubernetes provides self-healing, scalability, and declarative deployments, while GitHub Actions offers native CI/CD integration with minimal operational overhead. Google Cloud services were selected for their tight Kubernetes integration, reliable infrastructure, and strong IAM-based security model.
+Architecture Diagram (Logical Flow)
+Developer pushes code to GitHub
+→ GitHub Actions CI/CD pipeline starts
+→ Docker images are built for backend and frontend
+→ Images are scanned for vulnerabilities using Trivy
+→ Images are pushed to Google Artifact Registry
+→ GitHub Actions authenticates to GKE
+→ Kubernetes manifests are applied to staging or production namespace
+→ Application pods run inside GKE with health checks and services
+Key Components and Interaction
+GitHub Actions orchestrates the CI/CD pipeline
+Docker builds immutable container images
+Google Artifact Registry stores versioned container images
+Google Kubernetes Engine runs and manages containers
+kubectl applies Kubernetes manifests and updates workloads
 2. Setup Instructions
 Prerequisites
-GCP Project with GKE cluster and Artifact Registry.
-Cloud SQL PostgreSQL instance.
-GitHub repository with Secrets set for:
+A Google Cloud Platform project
+A configured GKE cluster
+An Artifact Registry Docker repository
+A GitHub repository containing the application code
+A Google Cloud service account with the following permissions:
+Artifact Registry Writer
+Kubernetes Engine Developer
+Kubernetes Engine Cluster Viewer
+GitHub Secrets configured:
 GCP_PROJECT_ID
 GKE_REGION
 GKE_CLUSTER
-GCP_SA_KEY (Service Account JSON)
-Installed tools:
-kubectl
-gcloud CLI
-Docker
+GCP_SA_KEY
 Deployment Steps
-Clone repository:
-git clone <repo-url>
-cd <project-folder>
-Authenticate to GCP:
-gcloud auth activate-service-account --key-file=$GCP_SA_KEY
-gcloud config set project $GCP_PROJECT_ID
-Get Kubernetes credentials:
-gcloud container clusters get-credentials $GKE_CLUSTER --region $GKE_REGION
-Build Docker images:
-docker build -t us-central1-docker.pkg.dev/$GCP_PROJECT_ID/apps/backend:<commit-sha> ./backend
-docker build -t us-central1-docker.pkg.dev/$GCP_PROJECT_ID/apps/frontend:<commit-sha> ./frontend
-Push images:
-docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/apps/backend:<commit-sha>
-docker push us-central1-docker.pkg.dev/$GCP_PROJECT_ID/apps/frontend:<commit-sha>
-Deploy to GKE:
-kubectl apply -f k8s/namespaces.yaml
-kubectl apply -n <namespace> -f k8s/backend.yaml
-kubectl apply -n <namespace> -f k8s/frontend.yaml
+Clone the GitHub repository
+Create and configure the GKE cluster
+Create the Artifact Registry repository
+Create a Google Cloud service account and download the JSON key
+Add the service account key and project details to GitHub Secrets
+Push code to the staging or main branch
+Allow GitHub Actions to automatically build, scan, push, and deploy the application
 3. Architecture Decisions
-Cloud provider: GCP was chosen for its managed Kubernetes service (GKE) and integration with Artifact Registry & Cloud SQL.
-Kubernetes setup: GKE allows scalable clusters with managed upgrades and security patches.
-Database connectivity: Cloud SQL with private IP ensures secure connectivity from GKE pods.
-CI/CD tool: GitHub Actions was chosen for its native GitHub integration, flexibility, and ability to use secrets securely.
-Trade-offs: Using managed services increases cost slightly but saves operational overhead.
+Why Google Cloud Platform
+GCP was selected due to its fully managed Kubernetes service (GKE), integrated Artifact Registry, and native IAM model. GKE simplifies cluster management while providing enterprise-grade reliability and security.
+Why This Kubernetes Setup
+A single GKE cluster with separate namespaces (staging and production) was chosen to reduce infrastructure cost while still maintaining environment isolation. This approach allows safe testing in staging before promoting changes to production.
+Database Connectivity Approach
+Database credentials are injected via Kubernetes secrets and environment variables. Access to the database is restricted to internal networking, ensuring that only authorized pods can communicate with it.
+CI/CD Tool Choice
+GitHub Actions was chosen because it is tightly integrated with GitHub repositories, supports modern CI/CD workflows, and eliminates the need for maintaining external CI infrastructure.
+Trade-offs Considered
+Single cluster versus multiple clusters
+Namespace isolation versus full environment duplication
+Operational simplicity versus maximum fault isolation
 4. Cost Optimization
-Managed services reduce maintenance but scale dynamically to control costs.
-Pod auto-scaling ensures resources are only used when necessary.
-Docker image layers optimized for size to reduce storage and network usage.
+A single GKE cluster is used instead of multiple clusters
+Namespaces reduce infrastructure duplication
+Artifact Registry is used instead of external container registries
+CI/CD pipelines run only on code changes
+No persistent build servers or runners are required
 5. Security Considerations
-Secrets management: GCP Secret Manager and GitHub secrets used for credentials.
-Network security: Private IP for database, and firewall rules to limit access.
-Database access: IAM roles and least-privilege principle applied.
-Container security: Vulnerability scans using Trivy; images built from minimal base images.
+Secrets Management
+Sensitive data is stored in GitHub Secrets and Kubernetes Secrets
+Service account keys are never committed to the repository
+Secrets are injected only at runtime
+Network Security
+The GKE cluster uses private networking
+Only required services are exposed
+Internal communication is restricted within the cluster
+Database Access
+Database credentials are stored securely
+Access is limited to backend services
+No public database endpoints are exposed
+Container Security
+Images are scanned using Trivy during CI
+High and critical vulnerabilities are surfaced early
+Minimal base images reduce attack surface
 6. Troubleshooting Guide
-Check pod status:
-kubectl get pods -n <namespace>
-View logs:
-kubectl logs <pod-name> -n <namespace>
-Connect to database:
-gcloud sql connect <instance-name> --user=<user>
-Verify connectivity:
-kubectl exec -it <pod-name> -n <namespace> -- curl http://<service>:<port>
+Checking Pod Status
+Use kubectl to list pods in the desired namespace
+Inspect pod states such as CrashLoopBackOff or Pending
+Viewing Logs
+Use kubectl logs to view application logs
+Check for startup failures or runtime errors
+Connecting to the Database
+Exec into the backend pod using kubectl
+Verify environment variables and database connectivity
+Verifying Connectivity
+Check Kubernetes services and endpoints
+Describe pods and services to identify misconfigurations
 7. Future Improvements
-Monitoring enhancements: Add Prometheus/Grafana dashboards for metrics.
-High availability: Multi-zone GKE cluster with replicas and read replicas for the database.
+Monitoring Enhancements
+Integrate Prometheus and Grafana
+Enable Google Cloud Monitoring and alerting
+Security Hardening
+Adopt Workload Identity instead of service account keys
+Apply Kubernetes Network Policies
+Enforce Pod Security Standards
+Performance Optimizations
+Enable Horizontal Pod Autoscaling
+Define CPU and memory resource limits
+Optimize container startup times
+High Availability
+Deploy multiple replicas per service
+Use multi-zone node pools
+Implement rolling updates and readiness probes
