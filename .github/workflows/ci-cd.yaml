@@ -41,19 +41,16 @@ jobs:
         run: |
           docker build -t $REGISTRY/$PROJECT_ID/apps/frontend:${{ github.sha }} ./frontend
 
-      # ---------- TEST ----------
-      - name: Basic Health Test (backend)
-        run: |
-          echo "Health endpoint exists (tested via probes in K8s)"
-
-      # ---------- SCAN ----------
-      - name: Container Scan (Trivy)
+      - name: Trivy scan backend image
         uses: aquasecurity/trivy-action@master
+        env:
+            IMAGE_REF: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/apps/backend:${{ github.sha }}
         with:
-          image-ref: $REGISTRY/$PROJECT_ID/apps/backend:${{ github.sha }}
-          severity: HIGH,CRITICAL
-          exit-code: 0
-
+            image-ref: ${{ env.IMAGE_REF }}
+            format: table
+            severity: CRITICAL,HIGH
+            exit-code: 1
+        
       # ---------- PUSH ----------
       - name: Push Images
         run: |
