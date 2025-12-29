@@ -8,7 +8,7 @@ on:
 
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
-  REGION: ${{ secrets.GKE_REGION }}
+  REGION: ${{ secrets.GKE_CLUSTER_LOCATION }}
   CLUSTER_NAME: ${{ secrets.GKE_CLUSTER }}
   REGISTRY: us-central1-docker.pkg.dev
 
