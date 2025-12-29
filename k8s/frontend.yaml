@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: us-central1-docker.pkg.dev/YOUR_PROJECT_ID/apps/frontend:latest
+          image: us-central1-docker.pkg.dev/steel-ridge-482212-p8/apps/frontend:latest
           ports:
             - containerPort: 3000
           resources:
