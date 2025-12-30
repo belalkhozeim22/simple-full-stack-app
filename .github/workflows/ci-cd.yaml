@@ -42,16 +42,16 @@ jobs:
       # ---------- BUILD ----------
       - name: Build Backend Image
         run: |
-          docker build -t $REGISTRY/$PROJECT_ID/apps/backend:${{ github.sha }} ./backend
+          docker build -t $REGISTRY/$PROJECT_ID/apps/backend:latest ./backend
 
       - name: Build Frontend Image
         run: |
-          docker build -t $REGISTRY/$PROJECT_ID/apps/frontend:${{ github.sha }} ./frontend
+          docker build -t $REGISTRY/$PROJECT_ID/apps/frontend:latest ./frontend
 
       - name: Trivy scan backend image
         uses: aquasecurity/trivy-action@master
         env:
-            IMAGE_REF: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/apps/backend:${{ github.sha }}
+            IMAGE_REF: ${{ env.REGISTRY }}/${{ env.PROJECT_ID }}/apps/backend:latest
         with:
             image-ref: ${{ env.IMAGE_REF }}
             format: table
@@ -61,8 +61,8 @@ jobs:
       # ---------- PUSH ----------
       - name: Push Images
         run: |
-          docker push $REGISTRY/$PROJECT_ID/apps/backend:${{ github.sha }}
-          docker push $REGISTRY/$PROJECT_ID/apps/frontend:${{ github.sha }}
+          docker push $REGISTRY/$PROJECT_ID/apps/backend:latest
+          docker push $REGISTRY/$PROJECT_ID/apps/frontend:latest
 
       # ---------- DEPLOY ----------
       - name: Get GKE Credentials
@@ -81,8 +81,8 @@ jobs:
             fi
         
             IMAGE_TAG="${{ github.sha }}"
-            IMAGE_BACKEND="$REGISTRY/$PROJECT_ID/apps/backend:$IMAGE_TAG"
-            IMAGE_FRONTEND="$REGISTRY/$PROJECT_ID/apps/frontend:$IMAGE_TAG"
+            IMAGE_BACKEND="$REGISTRY/$PROJECT_ID/apps/backend:latest"
+            IMAGE_FRONTEND="$REGISTRY/$PROJECT_ID/apps/frontend:latest"
         
             sed -i "s|IMAGE_BACKEND|$IMAGE_BACKEND|g" k8s/backend.yaml
             sed -i "s|IMAGE_FRONTEND|$IMAGE_FRONTEND|g" k8s/frontend.yaml
