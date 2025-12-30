@@ -1,27 +1,17 @@
-# ---------- BUILD STAGE ----------
-    FROM node:18-alpine AS build
+FROM node:18-alpine
 
-    WORKDIR /app
-    
-    COPY package*.json ./
-    RUN npm install
-    
-    COPY . .
-    RUN npm run build
-    
-    # ---------- RUNTIME STAGE ----------
-    FROM node:18-alpine
-    
-    WORKDIR /app
-    
-    # Copy only production deps
-    COPY package*.json ./
-    RUN npm install --omit=dev
-    
-    # Copy built output ONLY
-    COPY --from=build /app/dist ./dist
-    COPY --from=build /app/public ./public
-    
-    EXPOSE 5000
-    CMD ["node", "dist/server.js"]
-    
+WORKDIR /app
+
+# Install deps
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
+
+# Copy source
+COPY . .
+
+# Build Strapi
+RUN pnpm build
+
+EXPOSE 1337
+
+CMD ["pnpm", "start"]

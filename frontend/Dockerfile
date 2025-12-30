@@ -1,11 +1,17 @@
-FROM node:18-alpine
+FROM node:20-alpine
 
 WORKDIR /app
 
-COPY package.json package-lock.json* ./
-RUN npm install
+# Copy package files first
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
 
+# Copy source
 COPY . .
 
+# Build Next.js app
+RUN pnpm build
+
 EXPOSE 3000
-CMD ["npm", "run", "dev"]
+
+CMD ["pnpm", "start"]
