@@ -10,46 +10,79 @@ This architecture was chosen because it balances robustness and cost-efficiency.
 
 
 Architecture Diagram (Logical Flow)
+
 Developer pushes code to GitHub
+
 → GitHub Actions CI/CD pipeline starts
+
 → Docker images are built for backend and frontend
+
 → Images are scanned for vulnerabilities using Trivy
+
 → Images are pushed to Google Artifact Registry
+
 → GitHub Actions authenticates to GKE
+
 → Kubernetes manifests are applied to staging or production namespace
+
 → Application pods run inside GKE with health checks and services
 
 Key Components and Interaction
+
 GitHub Actions orchestrates the CI/CD pipeline
+
 Docker builds immutable container images
+
 Google Artifact Registry stores versioned container images
+
 Google Kubernetes Engine runs and manages containers
+
 kubectl applies Kubernetes manifests and updates workloads
 
 2. Setup Instructions
+
 Prerequisites
+
 A Google Cloud Platform project
+
 A configured GKE cluster
+
 An Artifact Registry Docker repository
+
 A GitHub repository containing the application code
 
 A Google Cloud service account with the following permissions:
+
 Artifact Registry Writer
+
 Kubernetes Engine Developer
+
 Kubernetes Engine Cluster Viewer
+
 GitHub Secrets configured:
+
 GCP_PROJECT_ID
+
 GKE_REGION
+
 GKE_CLUSTER
+
 GCP_SA_KEY
 
 Deployment Steps
+
 Clone the GitHub repository
+
 Create and configure the GKE cluster
+
 Create the Artifact Registry repository
+
 Create a Google Cloud service account and download the JSON key
+
 Add the service account key and project details to GitHub Secrets
+
 Push code to the staging or main branch
+
 Allow GitHub Actions to automatically build, scan, push, and deploy the application
 
 3. Architecture Decisions
