@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: us-central1-docker.pkg.dev/steel-ridge-482212-p8/apps/backend:${{ github.sha }} 
+          image: us-central1-docker.pkg.dev/steel-ridge-482212-p8/apps/backend:latest
           ports:
             - containerPort: 1337
           env:
