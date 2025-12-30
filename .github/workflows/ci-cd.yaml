@@ -72,12 +72,12 @@ jobs:
           kubectl get nodes
       
 
-          - name: Deploy to Kubernetes
-          run: |
+      - name: Deploy to Kubernetes
+        run: |
             if [[ "$GITHUB_REF" == "refs/heads/main" ]]; then
-              NAMESPACE=production
+                NAMESPACE=production
             else
-              NAMESPACE=staging
+                NAMESPACE=staging
             fi
         
             IMAGE_TAG="${{ github.sha }}"
